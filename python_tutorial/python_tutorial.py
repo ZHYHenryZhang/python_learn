@@ -871,7 +871,7 @@ def errors_and_exceptions_8():
 
   def defining_clean_up_actions_8_6():
     # NOTE: The try statement has another optinal clause finally which is intended to define clean-up actions that must ve executed under all circumstances.
-        def divide(x, y):
+    def divide(x, y):
       try:
         result = x / y
       except ZeroDivisionError:
@@ -909,54 +909,446 @@ section += 1
 def classes_9():
   def a_word_about_names_and_objects_9_1():
     pass
-  
   a_word_about_names_and_objects_9_1()
 
   def python_scopes_and_namespaces_9_2():
-    pass
+    # NOTE: To rebind variables found outside of the innermost scope, the nonlocal statement can be used; if not declared nonlocal, those variables are read-only (an attempt to write to such a variable will simply create a new local variable in the innermost scope, leaving the identically named outer variable unchanged).
+    # NOTE: If no global statement is in effect – assignments to names always go into the innermost scope.
+    # NOTE: Assignments do not copy data — they just bind names to objects. 
+    def scope_test():
+      def do_local():
+        spam = "local spam"
+
+      def do_nonlocal():
+        nonlocal spam # NOTE: nonlocal will make it go to outter level
+        spam = "nonlocal spam"
+
+      def do_global():
+        global spam # NOTE: global will go to the outermost level.
+        spam = "global spam"
+
+      spam = "test spam"
+      do_local()
+      print("After local assignment:", spam)
+      do_nonlocal()
+      print("After nonlocal assignment:", spam)
+      do_global()
+      print("After global assignment:", spam)
+
+    scope_test()
+    
   
   python_scopes_and_namespaces_9_2()
 
   def a_first_look_at_classes_9_3():
+    # NOTE: you can define a class with only statements
+    class FirstClass: # NOTE
+      print("FirstClass defined") # NOTE
+    
+    # NOTE: When a class definition is entered, a new namespace is created,
+    # NOTE: When a class definition is left normally (via the end), a class object is created.
+    # NOTE: The original local scope (the one in effect just before the class definition was entered) is reinstated, and the class object is bound here to the class name given in the class definition header (ClassName in the example).
+    # NOTE: Class objects support two kinds of operations: attribute references and instantiation.
+    # NOTE: A method is a function that “belongs to” an object. (In Python, the term method is not unique to class instances: other object types can have methods as well.)
+    # NOTE: previously, I think you have to have all members in __init__, it might not be true.
+    # NOTE: immutable object are not shared but mutable object are shared by all instance
+    class InitClass:
+      attr = 1 # NOTE: not shared across instances (different id)
+      class_list = [] # NOTE: shared across instances (same id)
+      def __init__(self, arg):
+        self.num = arg
+      
+      def plus(self, number):
+        self.num += number
+        return self.num
+      
+      def list_append(self, item):
+        self.class_list.append(item)
+    
+    obj1 = InitClass(1)
+    obj2 = InitClass(2)
+    obj1.attr = 3
+    obj1.list_append("only obj1")
+    print(obj2.attr)
+    print(obj2.class_list)
+    # NOTE: In general, calling a method with a list of n arguments is equivalent to calling the corresponding function with an argument list that is created by inserting the method’s instance object before the first argument.
+    print(InitClass.plus(obj1, 1)) # NOTE
+    print(obj1.plus(1)) # NOTE
     pass
 
   a_first_look_at_classes_9_3()
 
   def random_remarks_9_4():
+    # NOTE: Data attributes override method attributes with the same name
+    # NOTE: Any function object that is a class attribute defines a method for instances of that class. It is not necessary that the function definition is textually enclosed in the class definition: assigning a function object to a local variable in the class is also ok.
+    def outside_method(self, x, y):
+      return min(x, y)
+    
+    class Foo:
+      f_min = outside_method
+
+      def g(self):
+        return "hello, world"
+      h = g
+    
+    # Each value is an object, and therefore has a class (also called its type). It is stored as object.__class__.
+    print(math.__class__)
+    print(print.__class__)
+    print(Foo().__class__)
     pass
   
   random_remarks_9_4()
 
   def inheritance_9_5():
-    pass
+    class Bar:
+      def g(self):
+        return "hello, world"
+    
+    class Foo(Bar):
+      f = 1
+    
+    print(Foo.__class__)
+    print(Foo.g.__class__)
+    # NOTE: Derived classes may override methods of their base classes.
+    # NOTE: There is a simple way to call the base class method directly: just call BaseClassName.methodname(self, arguments).
+    # NOTE: isinstance() to check an instance's type, use issubclass() to check class inheritance.
+    print(issubclass(bool, int)) # NOTE: True since bool is derived from int.
+  
+    # NOTE: For most purposes, in the simplest cases, you can think of the search for attributes inherited from a parent class as depth-first, left-to-right, not searching twice in the same class where there is an overlap in the hierarchy.
+  
   
   inheritance_9_5()
 
   def private_variables_9_6():
+    # NOTE: member variable with preceeding underscore are considered private by convention, but not restricted from being accessed.
     pass
   
   private_variables_9_6()
 
   def odds_and_ends_9_7():
+    # NOTE: an empty class will be useful to bundling together a few named data items.
+    class Student:
+      pass
+    
+    john = Student()
+    john.id = 1
+    john.name = "John"
+    print(john)
+
+    
+    # NOTE: Instance method objects have attributes, too: m.__self__ is the instance object with the method m(), and m.__func__ is the function object corresponding to the method.
     pass
   
   odds_and_ends_9_7()
 
   def iterators_9_8():
-    pass
+    # NOTE: The use of iterators pervades and unifies Python. Behind the scenes, the for statement calls iter() on the container object. 
+    # NOTE: The function returns an iterator object that defines the method __next__() which accesses elements in the container one at a time. 
+    # NOTE: When there are no more elements, __next__() raises a StopIteration exception which tells the for loop to terminate.
+    
+    s = 'abs'
+    it = iter(s)
+    print(it)
+    while True:
+      try:
+        print(next(it))
+      except StopIteration as err:
+        print("caught StopIteration error", err)
+        break
+    
+    # This is Okay, but ugly
+    class Group:
+
+      class MemberIterator:
+        def __init__(self, members):
+          self.idx = -1
+          self.members = members
+        
+        def __next__(self):
+          self.idx += 1
+          if self.idx >= len(self.members):
+            raise StopIteration
+          else:
+            return self.members[self.idx]
+
+      def __init__(self, mem):
+        self.members = []
+        for member in mem:
+          self.members.append(member)
+      
+      def __iter__(self):
+        itr = self.MemberIterator(self.members)
+        return itr
+
+    team = Group(["Henry", "David", "John"])
+    
+    itr = iter(team)
+    print(next(itr))
+
+    for member in team:
+      print(member)
+    
+    ### NOTE: elegant inplementation of reverse iterator
+    class Reverse:
+      """ Iterator for looping over a sequence backwards."""
+      def __init__(self, seq):
+        self.seq = seq
+        self.index = 0
+      
+      def __iter__(self):
+        self.index = len(self.seq)
+        return self
+      
+      def __next__(self):
+        if self.index == 0:
+          raise StopIteration
+        else:
+          self.index -= 1
+          return self.seq[self.index]
+    
+    ###
+
+    nums = [1, 2, 3, 4]
+    for num in Reverse(nums):
+      print(num)
+    
+    nums = []
+    for num in Reverse(nums):
+      print(num)
+
+      
   
   iterators_9_8()
 
   def generators_9_9():
+    # NOTE: Generators are a simple and powerful tool for creating iterators. 
+    # NOTE: They are written like regular functions but use the yield statement whenever they want to return data. 
+    # NOTE: Each time next() is called on it, the generator resumes where it left off (it remembers all the data values and which statement was last executed). 
+
+    def reverse(data):
+      for index in range(len(data)-1, -1, -1):
+        yield data[index]
+    
+    nums = [1, 2, 3, 4]
+    for num in reverse(nums):
+      print(num)
+    
+    nums = []
+    for num in reverse(nums):
+      print(num)
     pass
   
   generators_9_9()
 
   def generator_expressions_9_10():
+    # NOTE: Some simple generators can be coded succinctly as expressions using a syntax similar to list comprehensions but with parentheses instead of square brackets.
+    # NOTE: Generator expressions are more compact but less versatile than full generator definitions and tend to be more memory friendly than equivalent list comprehensions.
+
+    sine_table = {x: math.sin(x * math.pi / 180) for x in range(0, 91)} # NOTE
+
+    # NOTE: unique_words = set(word for line in page for word in line.split())
+
+    # NOTE: valensictorian = max((student.gpa, student.name) for student in graduates)
+
+
     pass
   
   generator_expressions_9_10()
 
 classes_9()
 
+def brief_tour_of_the_standard_library_10():
+  def operating_system_interface_10_1():
+    # NOTE: The built-in dir() and help() functions are useful as interactive aids for working with large modules like os:
+    import os
+    dir(os)
+    pass
+
+  operating_system_interface_10_1()
+
+  def file_wildcards_10_2():
+    # NOTE: The glob module provides a function for making file lists from directory wildcard searches
+    import glob
+    print(glob.glob('*.py')) # NOTE
+    pass
+  
+  file_wildcards_10_2()
+
+  def command_line_arguments_10_3():
+    print(sys.argv)
+    # NOTE: The argparse module provides a mechanism to process command line arguments. It should always be preferred over directly processing sys.argv manually.
+    import argparse
+    from getpass import getuser
+    parser = argparse.ArgumentParser(description='An argparse example')
+    parser.add_argument('name', nargs='?', default=getuser(), help='The name of user')
+    parser.add_argument('--verbose', '-v', action='count')
+    args = parser.parse_args()
+    if not args.verbose:
+      print('Try run this again with multiple "-v" flages!')
+    else:
+      greetings = ['Hi', 'Hello', 'Nice to meet you'][args.verbose % 3]
+      print('{} {}'.format(greetings, args.name))
+    
+
+  
+  command_line_arguments_10_3()
+
+  def error_output_redirection_and_program_termination_10_4():
+    # NOTE: The stderr is useful for emitting warnings and error messages to make them visible even when stdout has been redirected
+    sys.stderr.write('Warning, trying to write a warning!\n')
+    pass
+
+  error_output_redirection_and_program_termination_10_4()
+
+  def string_pattern_matching_10_5():
+    import re
+    print(re.findall(r'\bf[a-z]*', 'which foot or hand fell fastest'))
+    print(re.sub(r'(\b[a-z]+) \1', r'\1', 'cat in the the hat'))
+    
+    # NOTE: When only simple capabilities are needed, string methods are preferred because they are easier to read and debug:
+    print('tea for too'.replace('too', 'two'))
+  
+  string_pattern_matching_10_5()
+
+  def mathematics_10_6():
+    import random
+    print(random.choice(['apple', 'pear', 'banana'])) # NOTE
+    print(random.sample(range(100), 10)) # NOTE
+    print(random.random()) # NOTE: random float
+    print(random.randrange(6)) # NOTE: random integer
+    
+    data = [1, 1.1, 1, 1.05, 0.99, 0.9]
+    import statistics
+    print(statistics.mean(data)) # NOTE
+    print(statistics.median(data)) # NOTE
+    print(statistics.variance(data)) # NOTE
+    print(statistics.mode(data))
+
+  mathematics_10_6()
+
+  def internet_access_10_7():
+    from urllib.request import urlopen
+    with urlopen('http://www.google.com') as response:
+      for line in response:
+        line = line.decode('utf-8', errors="replace")
+        if 'EST' in line or 'EDT' in line:
+          print(line)
+        else:
+          print(line)
+  
+  internet_access_10_7()
+
+  def dates_and_times_10_8():
+    from datetime import date
+    now = date.today()
+    print(now)
+    # NOTE: 08-11-19. 11 Aug 2019 is a Sunday on the 11 day of August.
+    print(now.strftime("%m-%d-%y. %d %b %Y is a %A on the %d day of %B.")) # NOTE
+    
+    birthday = date(1064, 7, 31)
+    age = now - birthday
+    print(age.days)
+    
+  dates_and_times_10_8()
+
+  def data_compression_10_9():
+    import zlib
+    s = b'which which has which witches wrist watch'
+    print(len(s))
+    t = zlib.compress(s)
+    print(len(t))
+    print(zlib.decompress(t))
+    print(zlib.crc32(s))
+  
+  data_compression_10_9()
+
+  def performance_measurement_10_10():
+    # NOTE: In contrast to timeit’s fine level of granularity, the profile and pstats modules provide tools for identifying time critical sections in larger blocks of code.
+    from timeit import Timer
+    print(Timer('t=a; a=b; b=t', 'a=1; b=2').timeit())
+    print(Timer('a,b = b,a', 'a=1; b=2').timeit())
+
+
+  
+  performance_measurement_10_10()
+
+  def quality_control_10_11():
+    # unittest and doctest is memtioned.
+    pass
+  
+  quality_control_10_11()
+
+  def batteries_included_10_12():
+    pass
+  
+  batteries_included_10_12()
+
+brief_tour_of_the_standard_library_10()
+
+def brief_tour_of_the_standard_library_11():
+  def multi_threading_11_4():
+    ### NOTE: multi threading template
+    import threading, zipfile
+    class AsyncZip(threading.Thread):
+      def __init__(self, infile, outfile):
+        threading.Thread.__init__(self)
+        self.infile = infile
+        self.outfile = outfile
+      
+      def run(self):
+        f = zipfile.ZipFile(self.outfile, 'w', zipfile.ZIP_DEFLATED)
+        f.write(self.infile)
+        f.close()
+        print('Finished background zip of:', self.infile)
+    
+    background = AsyncZip('data.txt', 'data_archive.zip')
+    background.start()
+    print('This line should go first, main program is still running.')
+
+    background.join() # Wait for the background task to finish
+    print('Main program waited until background was done')
+    ###
+
+    # NOTE: The principal challenge of multi-threaded applications is coordinating threads that share data or other resources. To that end, the threading module provides a number of synchronization primitives including locks, events, condition variables, and semaphores.
+    # NOTE: While those tools are powerful, minor design errors can result in problems that are difficult to reproduce. So, the preferred approach to task coordination is to concentrate all access to a resource in a single thread and then use the queue module to feed that thread with requests from other threads. Applications using Queue objects for inter-thread communication and coordination are easier to design, more readable, and more reliable.
+
+  multi_threading_11_4()
+
+  def logging_11_5():
+    import logging
+    logging.debug('Debugging information')
+    logging.info('Informational message')
+    logging.warning('Warning:config file %s not found', 'server.conf')
+    logging.error('Error occurred')
+    logging.critical('Critical error -- shutting down')
+    # NOTE: By default, informational and debugging messages are suppressed and the output is sent to standard error.
+  logging_11_5()
+
+  def tools_for_working_with_lists_11_7():
+    # NOTE: The array module provides an array() object that is like a list that stores only homogeneous data and stores it more compactly.
+    from array import array # NOTE
+    a = array("H", [400, 10, 700, 2222]) # NOTE
+
+    # NOTE: The collections module provides a deque() object that is like a list with faster appends and pops from the left side but slower lookups in the middle. These objects are well suited for implementing queues and breadth first tree searches
+    from collections import deque # NOTE
+    d = deque(["task1", "task2", "task3"]) # NOTE
+    d.append("task4")
+    print("Handling", d.popleft) # NOTE
+
+    # NOTE: The heapq module provides functions for implementing heaps based on regular lists. The lowest valued entry is always kept at position zero. This is useful for applications which repeatedly access the smallest element but do not want to run a full list sort
+    pass
+
+brief_tour_of_the_standard_library_11()
+
+def virtual_environments_and_packages_12():
+  # NOTE: You can also install a specific version of a package by giving the package name followed by == and the version number.
+  # NOTE: pip install requests==2.6.0
+  # NOTE: pip list will display all of the packages installed in the virtual environment:
+  # NOTE: pip freeze will produce a similar list of the installed packages, but the output uses the format that pip install expects. A common convention is to put this list in a requirements.txt file
+  # NOTE: The requirements.txt can then be committed to version control and shipped as part of an application. Users can then install all the necessary packages with install -r.
+  pass
+
+virtual_environments_and_packages_12()
+
+print("In global scope:", spam)
 print(state, "current section is", str(section))

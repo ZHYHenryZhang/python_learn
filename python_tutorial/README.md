@@ -13,6 +13,7 @@ Actually, there are definitely a few points worth mentioning.
  - exception handling orders
  - list comprehension
  - repr method and formatting
+ - a definition of a class is an object
 
 
 Patterns
